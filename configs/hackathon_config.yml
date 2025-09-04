@@ -16,7 +16,7 @@ functions:
   text_file_ingest:
     _type: text_file_ingest
     ingest_glob: mytools/text_file_ingest/src/text_file_ingest/data/*.txt
-    description: "Search for information about DOCA and GPUNetIO. For any questions about DOCA and GPUNetIO, you must use this tool!"
+    description: "Search for information about us open 2025. For any questions about us open 2025, you must use this tool!"
     embedder_name: nv-embedqa-e5-v5
     chunk_size: 512
 
@@ -29,6 +29,12 @@ llms:
     base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
     temperature: 0.7
     max_tokens: 2048
+
+embedders:
+  nv-embedqa-e5-v5:
+    _type: nim
+    model_name: nvidia/nv-embedqa-e5-v5
+    api_key: "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"
 
 workflow:
   _type: react_agent
