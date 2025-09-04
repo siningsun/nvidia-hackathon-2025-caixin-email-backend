@@ -1,7 +1,22 @@
+from nat.builder.builder import Builder
+from nat.builder.framework_enum import LLMFrameworkEnum
+from .embedder.aliyun_balian_embedder import AliyunBailianEmbedder
+from nat.builder.framework_enum import LLMFrameworkEnum
+
+# 初始化 builder
+builder = Builder()
+
+# 注册阿里云百炼 embedder
+builder.register_embedder(
+    name="text-embedding-v4",
+    embedder_class=AliyunBailianEmbedder,
+    framework=LLMFrameworkEnum.LANGCHAIN,
+    api_key="sk-1014201923ec4d189b8ebad8c99adbc5"
+)
+
 import logging
 
 from pydantic import Field
-from nat.builder.framework_enum import LLMFrameworkEnum
 from nat.builder.builder import Builder
 from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
