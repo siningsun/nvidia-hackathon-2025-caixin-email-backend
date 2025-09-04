@@ -11,7 +11,7 @@ PROJECT_ROOT=$(dirname "$NEMO_DIR")
 export TAVILY_API_KEY=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
 
 # 激活Python虚拟环境
-source .venv/bin/activate
+source .venv-clean/bin/activate
 
 # 配置
 export SSL_CERT_FILE=$(python3 -m certifi)

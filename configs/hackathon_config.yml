@@ -13,6 +13,13 @@ functions:
     _type: current_datetime
     description: "获取当前日期和时间"
 
+  text_file_ingest:
+    _type: text_file_ingest
+    ingest_glob: mytools/text_file_ingest/src/text_file_ingest/data/*.txt
+    description: "Search for information about DOCA and GPUNetIO. For any questions about DOCA and GPUNetIO, you must use this tool!"
+    embedder_name: nv-embedqa-e5-v5
+    chunk_size: 512
+
 llms:
   # 默认使用Bailian API (用户可修改)
   default_llm:
@@ -28,6 +35,7 @@ workflow:
   tool_names:
     - tavily_search
     - current_datetime
+    - text_file_ingest
   llm_name: default_llm
   verbose: true
   parse_agent_response_max_retries: 3
