@@ -20,6 +20,11 @@ functions:
     embedder_name: nv-embedqa-e5-v5
     chunk_size: 512
 
+  caixin_scrapper:
+    _type: caixin_scrapper
+
+
+
 llms:
   # 默认使用Bailian API (用户可修改)
   default_llm:
@@ -42,6 +47,7 @@ workflow:
     - tavily_search
     - current_datetime
     - text_file_ingest
+    - caixin_scrapper
   llm_name: default_llm
   verbose: true
   parse_agent_response_max_retries: 3
