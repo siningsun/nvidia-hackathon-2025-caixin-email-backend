@@ -4,60 +4,50 @@ from nat.builder.builder import Builder
 from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
-from playwright.async_api import async_playwright
+from .run_caixin_page_scrapper import CaixinSession, caixin_login, fetch_all_pages, parse_article
 
 logger = logging.getLogger(__name__)
 
 class CaixinScrapperFunctionConfig(FunctionBaseConfig, name="caixin_scrapper"):
     """
-    NAT function for scraping Caixin Weekly cover articles.
+    NAT function for scraping Caixin Weekly cover articles without browser.
     """
-    date: str = Field(default="latest", description="Target date: 'latest' or 'YYYY-MM-DD'")
+    email: str = Field(..., description="Caixin account email")
+    password: str = Field(..., description="Caixin account password")
 
 
 @register_function(config_type=CaixinScrapperFunctionConfig)
 async def caixin_scrapper_function(config: CaixinScrapperFunctionConfig, builder: Builder):
     async def _response_fn(input_message: str) -> dict:
-        date = config.date
         email = config.email
         password = config.password
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
+        session: CaixinSession = None
+        try:
+            # 登录
+            session = await caixin_login(email, password)
+            logger.info(f"Logged in as {email}")
 
-            # 1️⃣ 登录
-            await page.goto("https://u.caixin.com/web/login")
-            await page.fill("#email", email)
-            await page.fill("#password", password)
-            await page.click("button[type='submit']")
-            await page.wait_for_load_state("networkidle")
+            articles = await fetch_all_pages(total_pages=1)
+            parsed = [parse_article(a) for a in articles]
 
-            # 2️⃣ 导航到目标期刊
-            if date.lower() == "latest":
-                target_url = "https://weekly.caixin.com/latest/"
-            else:
-                target_url = f"https://weekly.caixin.com/{date}/"
+            for a in parsed:
+                print(f"[标题] {a['title']}")
+                print(f"[链接] {a['link']}")
+                print(f"[摘要] {a['summary']}")
+                print(f"[时间] {a['time']}")
+                print(f"[收费] {'是' if a['paid'] else '否'}")
+                print("\n")
 
-            await page.goto(target_url)
-            await page.wait_for_selector(".cover-story-title")
+            return {"success": True, "content": parsed}
 
-            # 3️⃣ 抓取封面标题和文章链接
-            headline = await page.text_content(".cover-story-title")
-            article_url = await page.get_attribute(".cover-story-title a", "href")
+        except Exception as e:
+            logger.exception("Error in caixin_scrapper_function")
+            return {"error": str(e)}
 
-            # 4️⃣ 抓取文章内容
-            await page.goto(article_url)
-            await page.wait_for_selector(".article-body")
-            article_text = await page.text_content(".article-body")
-
-            await browser.close()
-            return {
-                "date": date,
-                "headline": headline,
-                "url": article_url,
-                "content": article_text
-            }
+        finally:
+            if session:
+                await session.close()
 
     try:
         yield FunctionInfo.create(single_fn=_response_fn)

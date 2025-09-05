@@ -22,8 +22,10 @@ functions:
 
   caixin_scrapper:
     _type: caixin_scrapper
-
-
+    date: latest
+    email: 690058381@qq.com
+    password: oEzDudOAMZTh5y12Pgj%2FaQ%3D%3D
+    description: "获取财新周刊的封面报道，网页和内容"
 
 llms:
   # 默认使用Bailian API (用户可修改)
@@ -47,7 +49,6 @@ workflow:
     - tavily_search
     - current_datetime
     - text_file_ingest
-    - caixin_scrapper
   llm_name: default_llm
   verbose: true
   parse_agent_response_max_retries: 3
