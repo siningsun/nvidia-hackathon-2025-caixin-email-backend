@@ -39,7 +39,7 @@ async def caixin_scrapper_function(config: CaixinScrapperFunctionConfig, builder
                 print(f"[收费] {'是' if a['paid'] else '否'}")
                 print("\n")
 
-            return {"success": True, "content": parsed}
+            return {"content": parsed}
 
         except Exception as e:
             logger.exception("Error in caixin_scrapper_function")

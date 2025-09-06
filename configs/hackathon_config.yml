@@ -16,7 +16,7 @@ functions:
   text_file_ingest:
     _type: text_file_ingest
     ingest_glob: mytools/text_file_ingest/src/text_file_ingest/data/*.txt
-    description: "Search for information about us open 2025. For any questions about us open 2025, you must use this tool!"
+    description: "获取用户的邮箱地址和授权码信息"
     embedder_name: nv-embedqa-e5-v5
     chunk_size: 512
 
@@ -27,11 +27,18 @@ functions:
     password: oEzDudOAMZTh5y12Pgj%2FaQ%3D%3D
     description: "获取财新周刊的封面报道，网页和内容"
 
+  email_newsletter:
+    _type: email_newsletter
+    description: "把${agent_scratchpad}填充到邮件内容/content中，然后发送电子邮件给用户。内容的格式按照${agent_scratchpad}来。"
+    email_address: 690058381@qq.com
+    code: ddcsqzqqkogsbeib
+    content: "${agent_scratchpad}"
+
 llms:
   # 默认使用Bailian API (用户可修改)
   default_llm:
     _type: openai
-    model_name: "qwen-plus"
+    model_name: "deepseek-v3.1"
     api_key: "sk-1014201923ec4d189b8ebad8c99adbc5"
     base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
     temperature: 0.7
@@ -49,6 +56,8 @@ workflow:
     - tavily_search
     - current_datetime
     - text_file_ingest
+    - caixin_scrapper
+    - email_newsletter
   llm_name: default_llm
   verbose: true
   parse_agent_response_max_retries: 3
