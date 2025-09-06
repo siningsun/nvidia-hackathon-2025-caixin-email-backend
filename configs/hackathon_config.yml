@@ -1,8 +1,12 @@
 # NVIDIA NeMo Agent Toolkit 黑客松配置
-# 支持用户自定义OpenAI兼容API
-
 general:
   use_uvloop: true
+
+memory:
+  saas_memory:
+    _type: redis_memory
+    redis_url: redis://localhost:6379/0
+    namespace: saas_memory
 
 functions:
   tavily_search:
@@ -13,29 +17,22 @@ functions:
     _type: current_datetime
     description: "获取当前日期和时间"
 
-  text_file_ingest:
-    _type: text_file_ingest
-    ingest_glob: mytools/text_file_ingest/src/text_file_ingest/data/*.txt
-    description: "获取用户的邮箱地址和授权码信息"
-    embedder_name: nv-embedqa-e5-v5
-    chunk_size: 512
-
   caixin_scrapper:
     _type: caixin_scrapper
     date: latest
     email: 690058381@qq.com
     password: oEzDudOAMZTh5y12Pgj%2FaQ%3D%3D
-    description: "获取财新周刊的封面报道，网页和内容"
+    memory: saas_memory
+    description: "获取财新周刊的封面报道，网页和内容。"
 
   email_newsletter:
     _type: email_newsletter
-    description: "把${agent_scratchpad}填充到邮件内容/content中，然后发送电子邮件给用户。内容的格式按照${agent_scratchpad}来。"
+    description: "发送电子邮件给用户。"
     email_address: 690058381@qq.com
     code: ddcsqzqqkogsbeib
-    content: "${agent_scratchpad}"
+    memory: saas_memory
 
 llms:
-  # 默认使用Bailian API (用户可修改)
   default_llm:
     _type: openai
     model_name: "deepseek-v3.1"
@@ -55,10 +52,10 @@ workflow:
   tool_names:
     - tavily_search
     - current_datetime
-    - text_file_ingest
     - caixin_scrapper
     - email_newsletter
   llm_name: default_llm
+  default_memory: saas_memory
   verbose: true
   parse_agent_response_max_retries: 3
   max_iterations: 10

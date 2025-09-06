@@ -1,9 +1,12 @@
 import logging
+import uuid
 from pydantic import Field
 from nat.builder.builder import Builder
 from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
+from aiq.memory.models import MemoryItem
+from aiq.memory.interfaces import MemoryEditor
 from .run_caixin_page_scrapper import CaixinSession, caixin_login, fetch_all_pages, parse_article
 
 logger = logging.getLogger(__name__)
@@ -14,6 +17,7 @@ class CaixinScrapperFunctionConfig(FunctionBaseConfig, name="caixin_scrapper"):
     """
     email: str = Field(..., description="Caixin account email")
     password: str = Field(..., description="Caixin account password")
+    memory: str = Field("...", description="Memory for the function, if applicable.")
 
 
 @register_function(config_type=CaixinScrapperFunctionConfig)
@@ -21,7 +25,7 @@ async def caixin_scrapper_function(config: CaixinScrapperFunctionConfig, builder
     async def _response_fn(input_message: str) -> dict:
         email = config.email
         password = config.password
-
+        memory: MemoryEditor = builder.get_memory_client(config.memory)
         session: CaixinSession = None
         try:
             # 登录
@@ -39,6 +43,23 @@ async def caixin_scrapper_function(config: CaixinScrapperFunctionConfig, builder
                 print(f"[收费] {'是' if a['paid'] else '否'}")
                 print("\n")
 
+            # 写入 Memory
+            if memory:
+                await memory.add_items([
+                    MemoryItem(
+                        user_id="caixin_scrapper",
+                        memory=f"{a['title']} - {a['summary']}",
+                        tags=["caixin"],
+                        metadata={
+                            "uuid": str(uuid.uuid4()),
+                            "title": a['title'],
+                            "summary": a['summary'],
+                            "link": a['link'],
+                            "time": a['time']
+                        }
+                    )
+                    for a in parsed
+                ])
             return {"content": parsed}
 
         except Exception as e:
