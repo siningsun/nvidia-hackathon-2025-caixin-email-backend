@@ -18,19 +18,42 @@ class EmailNewsletterFunctionConfig(FunctionBaseConfig, name="email_newsletter")
     memory: str = Field(..., description="Memory 名称")
     user_id: str = Field("caixin_scrapper", description="检索 Memory 的 user_id")
 
-async def send_email(to_email: str, code: str, content: str) -> str:
+import html
+
+def json_to_html(news: list[dict]) -> str:
+    """将 news 列表转换成 HTML 卡片风格"""
+    html_content = """
+    <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #2c3e50;">财新周刊最新封面报道</h2>
+    """
+
+    for item in news:
+        title = html.escape(item.get('title', ''))
+        link = html.escape(item.get('link', '#'))
+        summary = html.escape(item.get('summary', ''))
+        html_content += f"""
+        <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; background-color: #f9f9f9;">
+          <h3 style="margin: 0 0 5px 0;"><a href="{link}" style="text-decoration: none; color: #2980b9;">{title}</a></h3>
+          <p style="margin: 0;">{summary}</p>
+        </div>
+        """
+
+    html_content += """
+      </body>
+    </html>
+    """
+    return html_content
+
+
+async def send_email_html(to_email: str, code: str, html_content: str) -> str:
     message = EmailMessage()
     message["From"] = to_email
     message["To"] = to_email
     message["Subject"] = "财新周刊最新封面报道整理"
-    message.set_content("请查收附件，里面是最新的财新封面文章。")
 
-    message.add_attachment(
-        content.encode("utf-8"),
-        maintype="application",
-        subtype="json",
-        filename="caixin_weekly.json"
-    )
+    # HTML 正文
+    message.add_alternative(html_content, subtype="html")
 
     await aiosmtplib.send(
         message,
@@ -53,8 +76,8 @@ async def email_newsletter_function(config: EmailNewsletterFunctionConfig, build
 
             items: list[MemoryItem] = await memory.search(
                 query="caixin",
-                top_k=10,
-                user_id="caixin_scrapper"
+                top_k=5,
+                user_id=config.user_id
             )
 
             if not items:
@@ -68,12 +91,12 @@ async def email_newsletter_function(config: EmailNewsletterFunctionConfig, build
                 }
                 for item in items
             ]
-            content = json.dumps(news, ensure_ascii=False, indent=2)
 
-            result = await send_email(
+            html_content = json_to_html(news)
+            result = await send_email_html(
                 to_email=config.email_address,
                 code=config.code,
-                content=content
+                html_content=html_content
             )
             return f"[Success] {result}"
 
