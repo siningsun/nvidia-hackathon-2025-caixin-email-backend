@@ -21,8 +21,15 @@ class RedisMemoryEditor(MemoryEditor):
             return
         pipeline = self.redis.pipeline()
         for item in items:
-            key = self._key(item.metadata.get("uuid") or str(uuid.uuid4()))
-            pipeline.set(key, json.dumps(item.dict()))
+            # 优先使用 metadata 中的 uuid，没有就生成一个
+            item_uuid = item.metadata.get("uuid")
+            if not item_uuid:
+                item_uuid = str(uuid.uuid4())
+                item.metadata["uuid"] = item_uuid  # 写回 metadata，保持一致性
+
+            key = self._key(item_uuid)
+            value = json.dumps(item.dict(), ensure_ascii=False)  # 避免中文乱码
+            pipeline.set(key, value, ex= 3600)  # 设置过期时间为1天 
         await pipeline.execute()
 
     async def search(self, query: str, top_k: int = 5, user_id: str = None) -> list[MemoryItem]:

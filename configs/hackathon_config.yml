@@ -20,23 +20,23 @@ functions:
   caixin_scrapper:
     _type: caixin_scrapper
     date: latest
-    email: 690058381@qq.com
-    password: oEzDudOAMZTh5y12Pgj%2FaQ%3D%3D
+    email: ${EMAIL_ADDRESS}
+    password: ${CAIXIN_PASSWORD}
     memory: saas_memory
     description: "获取财新周刊的封面报道，网页和内容。"
 
   email_newsletter:
     _type: email_newsletter
     description: "发送电子邮件给用户。"
-    email_address: 690058381@qq.com
-    code: ddcsqzqqkogsbeib
+    email_address: ${EMAIL_ADDRESS}
+    code: ${EMAIL_CODE}
     memory: saas_memory
 
 llms:
   default_llm:
     _type: openai
     model_name: "deepseek-v3.1"
-    api_key: "sk-1014201923ec4d189b8ebad8c99adbc5"
+    api_key: ${DASHSCOPE_API_KEY}
     base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
     temperature: 0.7
     max_tokens: 2048
@@ -45,7 +45,7 @@ embedders:
   nv-embedqa-e5-v5:
     _type: nim
     model_name: nvidia/nv-embedqa-e5-v5
-    api_key: "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"
+    api_key: ${NIM_API_KEY}
 
 workflow:
   _type: react_agent

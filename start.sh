@@ -10,11 +10,22 @@ PROJECT_ROOT=$(dirname "$NEMO_DIR")
 # 设置环境变量
 export TAVILY_API_KEY=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
 
+# 加载 .env 文件中的环境变量
+if [ -f "$NEMO_DIR/.env" ]; then
+  echo "🔐 加载环境变量中..."
+  export $(grep -v '^#' "$NEMO_DIR/.env" | xargs)
+else
+  echo "⚠️ 未找到 .env 文件，跳过加载环境变量"
+fi
+
 # 激活Python虚拟环境
 source .venv-clean/bin/activate
 
 # 配置
 export SSL_CERT_FILE=$(python3 -m certifi)
+
+echo "🧹 清理 Redis 中 saas_memory namespace 下的数据..."
+redis-cli -n 0 --raw KEYS "saas_memory:*" | xargs -r redis-cli -n 0 DEL
 
 # 启动后端服务
 echo "📡 启动后端服务..."

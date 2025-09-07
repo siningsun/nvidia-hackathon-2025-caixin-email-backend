@@ -9,6 +9,7 @@ from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
 from aiq.memory.interfaces import MemoryEditor
 from aiq.memory.models import MemoryItem
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def json_to_html(news: list[dict]) -> str:
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #2c3e50;">财新周刊最新封面报道</h2>
     """
-
+    print(news)
     for item in news:
         title = html.escape(item.get('title', ''))
         link = html.escape(item.get('link', '#'))
@@ -87,10 +88,16 @@ async def email_newsletter_function(config: EmailNewsletterFunctionConfig, build
                 {
                     "title": item.metadata.get("title", ""),
                     "link": item.metadata.get("link", ""),
-                    "summary": item.memory or ""
+                    "summary": item.metadata.get("summary", ""),
+                    "time": item.metadata.get("time", "")
                 }
                 for item in items
             ]
+            # ✅ 时间排序（降序，最新在前）
+            news.sort(
+                key=lambda x: datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S") if x["time"] else datetime.min,
+                reverse=True
+            )
 
             html_content = json_to_html(news)
             result = await send_email_html(

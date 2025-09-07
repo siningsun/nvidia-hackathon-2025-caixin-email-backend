@@ -7,15 +7,16 @@ from .redis_editor import RedisMemoryEditor
 import redis.asyncio as aioredis
 
 class RedisMemoryConfig(MemoryBaseConfig, RetryMixin, name="redis_memory"):
-    url: str = "redis://localhost:6379/0"  # 默认本地 Redis
+    redis_url: str = "redis://localhost:6379/0"  # 默认本地 Redis
     db: int = 0
+    namespace: str = "saas_memory"  # key 前缀
 
 @register_memory(config_type=RedisMemoryConfig)
 async def redis_memory_client(config: RedisMemoryConfig, builder: Builder):
-    redis_client = aioredis.from_url(config.url, db=config.db, decode_responses=True)
+    redis_client = aioredis.from_url(config.redis_url, db=config.db, decode_responses=True)
 
     from .redis_editor import RedisMemoryEditor
-    memory_editor = RedisMemoryEditor(redis_client)
+    memory_editor = RedisMemoryEditor(redis_client, namespace=config.namespace)
 
     if isinstance(config, RetryMixin):
         memory_editor = patch_with_retry(
